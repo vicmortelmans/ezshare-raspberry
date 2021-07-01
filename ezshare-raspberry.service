@@ -1,0 +1,14 @@
+[Unit]
+Description=Automatically upload pictures from ez Share wifi SD card to Google Photos
+After=network.target network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/python3 /usr/local/bin/ezshare.py
+
+[Install]
+WantedBy=multi-user.target
