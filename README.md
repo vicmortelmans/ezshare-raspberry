@@ -2,7 +2,7 @@
 
 Automatically download the pictures from your ez Share wifi SD card and upload them to Google Photos
 
-# About
+## About
 
 The LZeal wifi SD cards branded as "ez Share" are the only ones that are still in the market. They've doubled in price since all competition appearantly stopped production and they come with only very basic software.
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import datetime
+import exifread
 import glob
 import logging
 import nmcli
@@ -12,7 +13,6 @@ import time
 import traceback
 import urllib.parse
 from bs4 import BeautifulSoup
-
 
 
 #all SD cards should be configured with ssid "ez Share X100S", where 'X100S' is variable and 
@@ -46,27 +46,29 @@ def main():
 
                 try:
 
-                    camera_name = get_camera_name(ez_ssid)
-                    history_files = get_history_files(camera_name)
-                    home_network = find_active_connection()
-                    connect_to_ezshare_ssid(ez_ssid)
-                    filenames_and_dates = get_list_of_filenames_and_dates()
-                    
-                    for (directory, filename, date) in filenames_and_dates:
-
-                        if filename not in history_files:
-
-                            download(camera_name, directory, filename, date)
-
                     #import pdb; pdb.set_trace()
 
                             
+                    camera_name = get_camera_name(ez_ssid)
+                    home_network = find_active_connection()
+                    downloaded_files = list_downloaded_files(camera_name)
+                    connect_to_ezshare_ssid(ez_ssid)
+                    filenames = get_list_of_filenames_on_camera()
+                    
+                    for (directory, filename) in filenames:
+
+                        if filename not in downloaded_files:
+
+                            download_result = download(camera_name, directory, filename)
+                            
+                            if download_result:
+                                add_to_list_of_downloaded_files(camera_name, filename)
+
                     connect_to_home_network(home_network)
                     upload_result = upload_to_photos(camera_name)
 
                     if upload_result:
 
-                        add_temp_files_to_history(camera_name)
                         delete_files()
                         logging.info("Success!")
 
@@ -131,7 +133,7 @@ def get_camera_name(ssid):
     return camera_name
 
 
-def get_history_files(camera_name):
+def list_downloaded_files(camera_name):
     filename = f"{_HISTORY}/{camera_name}.txt"
     try:
         file = open(filename)
@@ -146,9 +148,9 @@ def get_history_files(camera_name):
     return lines
 
 
-
 def connect_to_ezshare_ssid(ssid):
     try:
+        logging.info(f"Going to connect to '{ssid}'")
         nmcli.device.wifi_connect(ssid=ssid, password=_PASSWORD)
         logging.info(f"Connected to '{ssid}'")
     except Exception as e:
@@ -156,14 +158,13 @@ def connect_to_ezshare_ssid(ssid):
         raise e
 
 
-def get_list_of_filenames_and_dates():
+def get_list_of_filenames_on_camera():
     url = "http://ezshare.card/mphoto"
     # in this html, <img> elements represent the pictures on the SD card and 
     # their @src attribute looks like this:
     # thumbnail?fname=DSCF3479.JPG&fdir=103_FUJI&ftype=0&time=1389464558
-    # where the timestamp is seconds-based with a 234499962 offset compared to epoch
-    # returning a tuple (dir, filename, date)
-    _OFFSET = 234637072
+    # where the timestamp is not usable
+    # returning a list of tuples (dir, filename)
     try:
         req = requests.get(url)
     except Exception as e:
@@ -171,38 +172,65 @@ def get_list_of_filenames_and_dates():
         raise e
     try:
         soup = BeautifulSoup(req.content, 'html.parser')
-        list_of_filenames_and_dates = []
+        list_of_filenames = []
         for img in soup.select('img'):
             src = img.attrs['src']
             query = urllib.parse.urlparse(src)
             query_dict = urllib.parse.parse_qs(query.query)
             filename = query_dict["fname"][0]
             directory = query_dict["fdir"][0]
-            epoch_time = int(query_dict["time"][0]) + _OFFSET
-            date = datetime.datetime.utcfromtimestamp(epoch_time).strftime("%Y%m%d")
-            logging.debug(f"File on card: {query.query} with calculated date '{date}'")
-            list_of_filenames_and_dates.append((directory, filename, date))
-        logging.info(f"Retrieved a list of {len(list_of_filenames_and_dates)} files that are on the card")
-        return list_of_filenames_and_dates
+            logging.debug(f"File on card: {query.query}")
+            list_of_filenames.append((directory, filename))
+        logging.info(f"Retrieved a list of {len(list_of_filenames)} files that are on the card")
+        return list_of_filenames
 
     except Exception as e:
         logging.error(f"Error parsing list of picturs from camera: {e}")
         raise e
 
 
-def download(camera_name, directory, filename, date):
+def download(camera_name, directory, filename):
+    # the file is downloaded, the date is fetched and the file is stored into
+    # {_TEMP}/{date} {camera_name}/{filename}
     url = f"http://ezshare.card/DCIM/{directory}/{filename}"
-    temp_directory = f"{_TEMP}/{date} {camera_name}"
-    filepath = f"{temp_directory}/{filename}"
+    directory = f"{_TEMP}"
 
-    # skip files that are already downloaded
-    if not os.path.exists(filepath):
-        os.makedirs(temp_directory, exist_ok=True)
+    try:
+        # download to {_TEMP}
+        filepath = f"{_TEMP}/{filename}"
         r = requests.get(url, allow_redirects=True)
         open(filepath, 'wb').write(r.content)
-        logging.info(f"Downloaded {filepath}")
-    else:
-        logging.info(f"Skipping {filepath}, it's already downloaded")
+        logging.info(f"Downloaded '{filepath}'")
+        # fetch date
+        f = open(filepath, 'rb')
+        tags = exifread.process_file(f)
+        datetime_tag = tags['EXIF DateTimeOriginal']
+        datetime_string = datetime_tag.values
+        datetime_object = datetime.datetime.strptime(datetime_string, '%Y:%m:%d %H:%M:%S')
+        date = datetime_object.strftime('%Y%m%d')
+        logging.info(f"Fetched the date from exif: '{date}'")
+        # move to album
+        album_directory = f"{_TEMP}/{date} {camera_name}"
+        os.makedirs(album_directory, exist_ok=True)
+        final_filepath = f"{album_directory}/{filename}"
+        os.replace(filepath, final_filepath)
+        logging.info(f"Moved '{filepath}' to '{final_filepath}'")
+        return True
+    except Exception as e:
+        logging.error(f"Error downloading '{filename}': {e}")
+        return False
+
+
+
+def add_to_list_of_downloaded_files(camera_name, filename):
+    history_filename = f"{_HISTORY}/{camera_name}.txt"
+    try:
+        file = open(history_filename, "a")
+        file.write(f"{filename}\n")
+        file.close()
+        logging.info(f"Added '{filename}' to '{history_filename}'")
+    except Exception as e:
+        logging.error(f"Error adding '{filename}' to '{history_filename}': {e}")
 
 
 def connect_to_home_network(name):
@@ -211,7 +239,8 @@ def connect_to_home_network(name):
         logging.info(f"Reconnected to home network '{name}'")
     except Exception as e:
         logging.error(f"Error reconnecting to home network '{name}': {e}")
-        raise e
+        # don't propagate, this function is in other exception handlers
+        # and that seems to cause problems
 
 
 def upload_to_photos(camera_name):
@@ -232,10 +261,10 @@ def upload_to_photos(camera_name):
         
     # check if there are files in the folder(s) for 'camera_name'
     # if so, do an upload (this will upload other folders as well)
-    history_filename = f"{_HISTORY}/{camera_name}.txt"
     temp_dirs = os.listdir(_TEMP)
     for temp_dir in temp_dirs:
         if camera_name in temp_dir:
+        # return immedialely: all images are uploaded
             return _upload_to_photos()
     else:
         logging.info("No pictures to upload")
@@ -248,25 +277,6 @@ def delete_files():
         shutil.rmtree(d)
     logging.info(f"Deleted {len(dirs)} directories in {_TEMP}")
 
-
-def add_temp_files_to_history(camera_name):
-    history_filename = f"{_HISTORY}/{camera_name}.txt"
-    temp_dirs = os.listdir(_TEMP)
-    filenames = []
-    for temp_dir in temp_dirs:
-        if camera_name in temp_dir:
-            filenames.extend(os.listdir(f"{_TEMP}/{temp_dir}"))
-
-    try:
-        file = open(history_filename, "a")
-        for filename in filenames:
-            file.write(f"{filename}\n")
-        file.close()
-        logging.info(f"Added {len(filenames)} lines to '{history_filename}'")
-    except Exception as e:
-        logging.error(f"Error adding {len(filenames)} lines to '{history_filename}'")
-
-    
 
 if __name__ == "__main__":
     main()
