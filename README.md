@@ -44,6 +44,6 @@ The pictures are not removed from the SD card, so you regularly have to check if
 
 - While connecting to the ezShare wifi SD card, the Raspberry Pi will be temporarily disconnected from the your home wifi network! This may disrupt the operation of other applications running on your Raspberry Pi. Depending on your camera, power to the SD card may stay up even if you turn off the camera, so your network will be interrupted every minute or so, while the script is checking if the camera has new images.
 - The script may work on other linux devices as well, but note that the service is configured to run as user `pi` (group `pi`). If you want this to be another user, modify `ezshare-raspberry.service`. 
-
+- The smoothness of the operation may vary depending on your camera. It must keep the SD card powered for the wifi to work. On my Fujifilm X100S, the SD card is always powered when the camera is on, and it remains powered a couple of minutes after you switch it off; that's ideal. On my Sony A850, the SD card seems only to be powered intermittently and for successfully transferring images you have to configure power saving to at least 5 minutes and open the menu for a while.  
 
 

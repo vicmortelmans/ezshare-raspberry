@@ -77,7 +77,7 @@ def main():
                         logging.warning("Failure!")
 
                     logging.debug("Sleeping")
-                    time.sleep(6)
+                    time.sleep(10)  # wait an extra 10 seconds before polling again
 
                 except Exception as e:
 
@@ -86,7 +86,7 @@ def main():
                     logging.error(f"There's a problem processing '{ez_ssid}': {e}")
 
             logging.debug("Sleeping")
-            time.sleep(6)
+            time.sleep(10)  # poll every 10 seconds for active cards
                 
 
     #execute this code if CTRL + C is used to kill python script
