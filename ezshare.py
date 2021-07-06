@@ -159,34 +159,50 @@ def connect_to_ezshare_ssid(ssid):
 
 
 def get_list_of_filenames_on_camera():
-    url = "http://ezshare.card/mphoto"
+    domain = "http://ezshare.card/"
+    url = domain + "mphoto"
     # in this html, <img> elements represent the pictures on the SD card and 
     # their @src attribute looks like this:
     # thumbnail?fname=DSCF3479.JPG&fdir=103_FUJI&ftype=0&time=1389464558
     # where the timestamp is not usable
     # returning a list of tuples (dir, filename)
-    try:
-        req = requests.get(url)
-    except Exception as e:
-        logging.error(f"Error downloading list of pictures from camera: {e}")
-        raise e
-    try:
-        soup = BeautifulSoup(req.content, 'html.parser')
-        list_of_filenames = []
-        for img in soup.select('img'):
-            src = img.attrs['src']
-            query = urllib.parse.urlparse(src)
-            query_dict = urllib.parse.parse_qs(query.query)
-            filename = query_dict["fname"][0]
-            directory = query_dict["fdir"][0]
-            logging.debug(f"File on card: {query.query}")
-            list_of_filenames.append((directory, filename))
-        logging.info(f"Retrieved a list of {len(list_of_filenames)} files that are on the card")
-        return list_of_filenames
 
-    except Exception as e:
-        logging.error(f"Error parsing list of picturs from camera: {e}")
-        raise e
+    list_of_filenames = []
+
+    while True:
+        
+        try:
+            logging.debug(f"Loading '{url}'")
+            with requests.get(url) as req:
+                html = req.content
+        except Exception as e:
+            logging.error(f"Error downloading list of pictures from camera: {e}")
+            raise e
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            # parse image files
+            for img in soup.select('img'):
+                src = img.attrs['src']
+                query = urllib.parse.urlparse(src)
+                query_dict = urllib.parse.parse_qs(query.query)
+                filename = query_dict["fname"][0]
+                directory = query_dict["fdir"][0]
+                logging.debug(f"File on card: {query.query}")
+                list_of_filenames.append((directory, filename))
+            # parse for next page
+            next = soup.select('div#post a')
+            if next:
+                url = domain + next[0].attrs['href']
+                logging.info(f"There's another page at '{url}'")
+            else:
+                logging.info("This was the last page")
+                break
+        except Exception as e:
+            logging.error(f"Error parsing list of picturs from camera: {e}")
+            raise e
+
+    logging.info(f"Retrieved a list of {len(list_of_filenames)} files that are on the card")
+    return list_of_filenames
 
 
 def download(camera_name, directory, filename):
@@ -198,8 +214,9 @@ def download(camera_name, directory, filename):
     try:
         # download to {_TEMP}
         filepath = f"{_TEMP}/{filename}"
-        r = requests.get(url, allow_redirects=True)
-        open(filepath, 'wb').write(r.content)
+        with requests.get(url, allow_redirects=True, timeout=10.0) as req:
+            blob = req.content
+        open(filepath, 'wb').write(blob)
         logging.info(f"Downloaded '{filepath}'")
         # fetch date
         f = open(filepath, 'rb')
