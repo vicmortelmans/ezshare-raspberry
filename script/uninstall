@@ -4,12 +4,16 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "=> Stopping ezshare-raspberry service...\n"
+echo "=> Stopping ezshare-raspberry and usbdcim-raspberry services...\n"
 sudo systemctl stop ezshare-raspberry
+sudo systemctl stop usbdcim-raspberry
 sudo systemctl disable ezshare-raspberry
+sudo systemctl disable usbdcim-raspberry
 
-echo "=> Removing ezshare-raspberry service...\n"
+echo "=> Removing ezshare-raspberry and usbdcim-raspberry services...\n"
 sudo rm -rf /usr/local/bin/ezshare.py
+sudo rm -rf /usr/local/bin/usbdcim.py
 sudo rm -rf /etc/systemd/system/ezshare-raspberry.service
+sudo rm -rf /etc/systemd/system/usbdcim-raspberry.service
 
-echo "Success: ezshare-raspberry service uninstalled!\n"
+echo "Success: ezshare-raspberry and usbdcim-raspberry services uninstalled!\n"

@@ -1,0 +1,13 @@
+[Unit]
+Description=Automatically upload pictures from USB mounted SD card to Google Photos
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/python3 /usr/local/bin/usbdcim.py
+
+[Install]
+WantedBy=multi-user.target
