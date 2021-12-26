@@ -180,8 +180,11 @@ def download(camera_name, path, filename):
         tags = exifread.process_file(f)
         datetime_tag = tags['EXIF DateTimeOriginal']
         datetime_string = datetime_tag.values
-        datetime_object = datetime.datetime.strptime(datetime_string, '%Y:%m:%d %H:%M:%S')
-        date = datetime_object.strftime('%Y%m%d')
+        if datetime_string == '0000:00:00 00:00:00':
+            date = datetime.datetime.now().strftime('%Y%m%d')
+        else:
+            datetime_object = datetime.datetime.strptime(datetime_string, '%Y:%m:%d %H:%M:%S')
+            date = datetime_object.strftime('%Y%m%d')
         logging.info(f"Fetched the date from exif: '{date}'")
         # move to album
         album_directory = f"{_TEMP}/{date} {camera_name}"
