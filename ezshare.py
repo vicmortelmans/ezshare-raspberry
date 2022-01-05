@@ -232,16 +232,17 @@ def download(camera_name, directory, filename):
         else:
             logging.critical(f"Retried 10 times downloading {url}")
         # fetch date
-        f = open(filepath, 'rb')
-        tags = exifread.process_file(f)
-        datetime_tag = tags['EXIF DateTimeOriginal']
-        datetime_string = datetime_tag.values
-        if datetime_string == '0000:00:00 00:00:00':
-            date = datetime.datetime.now().strftime('%Y%m%d')
-        else:
+        try:
+            f = open(filepath, 'rb')
+            tags = exifread.process_file(f)
+            datetime_tag = tags['EXIF DateTimeOriginal']
+            datetime_string = datetime_tag.values
             datetime_object = datetime.datetime.strptime(datetime_string, '%Y:%m:%d %H:%M:%S')
             date = datetime_object.strftime('%Y%m%d')
-        logging.info(f"Fetched the date from exif: '{date}'")
+            logging.info(f"Fetched the date from exif: '{date}'")
+        except Exception as e:
+            date = datetime.datetime.now().strftime('%Y%m%d')
+            logging.info(f"No date in exif, using today: '{date}'; because: {e}")
         # move to album
         album_directory = f"{_TEMP}/{date} {camera_name}"
         os.makedirs(album_directory, exist_ok=True)
@@ -251,6 +252,7 @@ def download(camera_name, directory, filename):
         return True
     except Exception as e:
         logging.error(f"Error downloading '{filename}': {e}")
+        logging.error(traceback.format_exc())
         return False
 
 

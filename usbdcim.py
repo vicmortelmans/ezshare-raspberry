@@ -24,14 +24,13 @@ _HISTORY = os.path.expanduser("~/.ezshare-raspberry-history")
 os.makedirs(_HISTORY, exist_ok=True)
 
 #temporary workspace while downloaden/uploading files
-_TEMP = "/tmp/ezshare_temporary_files"
+_TEMP = "/tmp/usbdcim_temporary_files"
 os.makedirs(_TEMP, exist_ok=True)
-os.makedirs(_TEMP + "/tmp", exist_ok=True)
 
 #path where the find automounted usb drives
 _USB = "/media"
 
-logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d %(funcName)s] %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d %(funcName)s] %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=logging.DEBUG)
 
 def main():
 
@@ -40,13 +39,13 @@ def main():
         #endless polling loop
         while True: 
 
+            #import pdb; pdb.set_trace()
+
             usb_name, usb_path = find_first_mounted_ezshare_usb_name()
 
             if usb_name:
 
                 try:
-
-                    #import pdb; pdb.set_trace()
 
                             
                     camera_name = get_camera_name(usb_name)
@@ -158,6 +157,7 @@ def download(camera_name, path, filename):
 
     try:
         # download to {_TEMP}
+        os.makedirs(_TEMP + "/tmp", exist_ok=True)
         filepath = f"{_TEMP}/tmp/{filename}"
 
         logging.info(f"Going to copy {file}")
@@ -176,16 +176,17 @@ def download(camera_name, path, filename):
         else:
             logging.critical(f"Retried 10 times copying {file}")
         # fetch date
-        f = open(filepath, 'rb')
-        tags = exifread.process_file(f)
-        datetime_tag = tags['EXIF DateTimeOriginal']
-        datetime_string = datetime_tag.values
-        if datetime_string == '0000:00:00 00:00:00':
-            date = datetime.datetime.now().strftime('%Y%m%d')
-        else:
+        try:
+            f = open(filepath, 'rb')
+            tags = exifread.process_file(f)
+            datetime_tag = tags['EXIF DateTimeOriginal']
+            datetime_string = datetime_tag.values
             datetime_object = datetime.datetime.strptime(datetime_string, '%Y:%m:%d %H:%M:%S')
             date = datetime_object.strftime('%Y%m%d')
-        logging.info(f"Fetched the date from exif: '{date}'")
+            logging.info(f"Fetched the date from exif: '{date}'")
+        except Exception as e:
+            date = datetime.datetime.now().strftime('%Y%m%d')
+            logging.info(f"No date in exif, using today: '{date}'; because: {e}")
         # move to album
         album_directory = f"{_TEMP}/{date} {camera_name}"
         os.makedirs(album_directory, exist_ok=True)
@@ -195,6 +196,7 @@ def download(camera_name, path, filename):
         return True
     except Exception as e:
         logging.error(f"Error downloading '{filename}': {e}")
+        logging.error(traceback.format_exc())
         return False
 
 
