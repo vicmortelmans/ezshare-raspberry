@@ -46,7 +46,7 @@ def main():
 
                 try:
 
-                    import pdb; pdb.set_trace()
+                    #import pdb; pdb.set_trace()
 
                             
                     camera_name = get_camera_name(ez_ssid)
