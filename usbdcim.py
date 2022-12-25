@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import beepy
 import datetime
 import exifread
 import glob
@@ -45,9 +46,10 @@ def main():
 
             if usb_name:
 
+                beepy.beep(sound="success")
+
                 try:
 
-                            
                     camera_name = get_camera_name(usb_name)
                     downloaded_files = list_downloaded_files(camera_name)
                     filenames = get_list_of_filenames_on_camera(usb_path)
@@ -59,14 +61,19 @@ def main():
                             download_result = download(camera_name, path, filename)
                             
                             if download_result:
-                                add_to_list_of_downloaded_files(camera_name, filename)
+                                beepy.beep(sound="ping")
+                            else:
+                                beepy.beep(sound="error")
 
                     unmount(usb_path)
+                    beepy.beep(sound="ready")
                     upload_result = upload_to_photos(camera_name)
 
                     if upload_result:
 
                         delete_files()
+                        for (path, filename) in filenames:
+                            add_to_list_of_downloaded_files(camera_name, filename)
                         logging.info("Success!")
 
                     else:

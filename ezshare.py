@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import beepy
 import datetime
 import exifread
 import glob
@@ -44,6 +45,8 @@ def main():
 
             if ez_ssid:
 
+                beepy.beep(sound="success")
+
                 try:
 
                     #import pdb; pdb.set_trace()
@@ -62,9 +65,13 @@ def main():
                             download_result = download(camera_name, directory, filename)
                             
                             if download_result:
+                                beepy.beep(sound="ping")
                                 add_to_list_of_downloaded_files(camera_name, filename)
+                            else:
+                                beepy.beep(sound="error")
 
                     connect_to_home_network(home_network)
+                    beepy.beep(sound="ready")
                     upload_result = upload_to_photos(camera_name)
 
                     if upload_result:
