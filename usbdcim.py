@@ -2,6 +2,7 @@
 import beepy
 import datetime
 import exifread
+import getpass
 import glob
 import logging
 import nmcli
@@ -31,9 +32,11 @@ os.makedirs(_TEMP, exist_ok=True)
 #path where the find automounted usb drives
 _USB = "/media"
 
-logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d %(funcName)s] %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d %(funcName)s] %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=logging.INFO)
 
 def main():
+
+    logging.info(f"Running as {getpass.getuser()}")
 
     try:
 
@@ -54,10 +57,13 @@ def main():
                     downloaded_files = list_downloaded_files(camera_name)
                     filenames = get_list_of_filenames_on_camera(usb_path)
                     
+                    count = 0
                     for (path, filename) in filenames:
 
+                        count += 1
                         if filename not in downloaded_files:
 
+                            logging.info(f"Progress {count} of {len(filenames)}")
                             download_result = download(camera_name, path, filename)
                             
                             if download_result:
@@ -80,14 +86,14 @@ def main():
 
                         logging.warning("Failure!")
 
-                    logging.debug("Sleeping")
+                    logging.info("Sleeping")
                     time.sleep(10)  # wait an extra 10 seconds before polling again
 
                 except Exception as e:
 
                     logging.error(f"There's a problem processing '{usb_path}': {e}")
 
-            logging.debug("Sleeping")
+            logging.info("Sleeping")
             time.sleep(10)  # poll every 10 seconds for active cards
                 
 
@@ -149,7 +155,7 @@ def get_list_of_filenames_on_camera(usb_path):
 
         filename = file.split('/')[-1]
         path = file.split(filename)[0]
-        logging.debug(f"File on card: {file}")
+        logging.info(f"File on card: {file}")
         list_of_filenames.append((path, filename))
 
     logging.info(f"Retrieved a list of {len(list_of_filenames)} files that are on the card")

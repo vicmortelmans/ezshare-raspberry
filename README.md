@@ -54,4 +54,11 @@ For USB downloading, insert the card into an USB adapter and plug it into the Ra
 - The script may work on other linux devices as well, but note that the service is configured to run as user `pi` (group `pi`). If you want this to be another user, modify `ezshare-raspberry.service`. 
 - The smoothness of the operation may vary depending on your camera. It must keep the SD card powered for the wifi to work. On my Fujifilm X100S, the SD card is always powered when the camera is on, and it remains powered a couple of minutes after you switch it off; that's ideal. On my Sony A850, the SD card seems only to be powered intermittently and for successfully transferring images you have to configure power saving to at least 5 minutes and open the menu for a while. On my Epson R-D1, the wifi card can't be used at all...
 
+## Sound
 
+Sound configuration problem reported in `/var/log/syslog`: `"Error opening PCM device. -- CODE: -16 -- MSG: Device or resource busy"` and not seen when running the script in a terminal, is solved by configuring `/etc/asound.conf`, adding:
+
+```
+defaults.pcm.card 0
+defaults.ctl.card 0
+```

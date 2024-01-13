@@ -5,6 +5,7 @@ Description=Automatically upload pictures from USB mounted SD card to Google Pho
 Type=simple
 User=pi
 Group=pi
+SupplementaryGroups=audio
 Restart=always
 RestartSec=1
 ExecStart=/usr/bin/python3 /usr/local/bin/usbdcim.py
