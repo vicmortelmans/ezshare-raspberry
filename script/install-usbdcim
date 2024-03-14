@@ -1,0 +1,18 @@
+#! /bin/sh
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "=> Installing ezshare-usbdcim script...\n"
+sudo cp usbdcim.py /usr/local/bin/
+sudo chmod +x /usr/local/bin/usbdcim.py
+
+echo "=> Starting ezshare-usbdcim service...\n"
+sudo cp usbdcim-raspberry.service /etc/systemd/system/
+sudo chmod 644 /etc/systemd/system/usbdcim-raspberry.service
+
+sudo systemctl start usbdcim-raspberry
+sudo systemctl enable usbdcim-raspberry
+
+echo "Success: usbdcim-raspberry scripts installed!\n"

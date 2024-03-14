@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import beepy
+#import beepy
 import datetime
 import exifread
 import getpass
@@ -49,7 +49,7 @@ def main():
 
             if usb_name:
 
-                beepy.beep(sound="success")
+                #beepy.beep(sound="success")
 
                 try:
 
@@ -66,13 +66,13 @@ def main():
                             logging.info(f"Progress {count} of {len(filenames)}")
                             download_result = download(camera_name, path, filename)
                             
-                            if download_result:
-                                beepy.beep(sound="ping")
-                            else:
-                                beepy.beep(sound="error")
+                            #if download_result:
+                                #beepy.beep(sound="ping")
+                            #else:
+                                #beepy.beep(sound="error")
 
                     unmount(usb_path)
-                    beepy.beep(sound="ready")
+                    #beepy.beep(sound="ready")
                     upload_result = upload_to_photos(camera_name)
 
                     if upload_result:

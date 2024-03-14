@@ -1,0 +1,15 @@
+#! /bin/sh
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "=> Stopping ezshare-raspberry services...\n"
+sudo systemctl stop ezshare-raspberry
+sudo systemctl disable ezshare-raspberry
+
+echo "=> Removing ezshare-raspberry services...\n"
+sudo rm -rf /usr/local/bin/ezshare.py
+sudo rm -rf /etc/systemd/system/ezshare-raspberry.service
+
+echo "Success: ezshare-raspberry services uninstalled!\n"

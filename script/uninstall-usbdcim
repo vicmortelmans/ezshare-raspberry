@@ -1,0 +1,15 @@
+#! /bin/sh
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "=> Stopping usbdcim-raspberry services...\n"
+sudo systemctl stop usbdcim-raspberry
+sudo systemctl disable usbdcim-raspberry
+
+echo "=> Removing usbdcim-raspberry services...\n"
+sudo rm -rf /usr/local/bin/usbdcim.py
+sudo rm -rf /etc/systemd/system/usbdcim-raspberry.service
+
+echo "Success: usbdcim-raspberry services uninstalled!\n"

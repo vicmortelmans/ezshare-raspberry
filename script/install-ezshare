@@ -1,0 +1,18 @@
+#! /bin/sh
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "=> Installing ezshare-raspberry script...\n"
+sudo cp ezshare.py /usr/local/bin/
+sudo chmod +x /usr/local/bin/ezshare.py
+
+echo "=> Starting ezshare-raspberry service...\n"
+sudo cp ezshare-raspberry.service /etc/systemd/system/
+sudo chmod 644 /etc/systemd/system/ezshare-raspberry.service
+
+sudo systemctl start ezshare-raspberry
+sudo systemctl enable ezshare-raspberry
+
+echo "Success: ezshare-raspberry scripts installed!\n"
