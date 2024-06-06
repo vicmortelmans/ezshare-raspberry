@@ -4,11 +4,11 @@ After=network.target network-online.target
 
 [Service]
 Type=simple
-User=pi
-Group=pi
+User=vic
+Group=vic
 Restart=always
 RestartSec=1
-ExecStart=/usr/bin/python3 /usr/local/bin/ezshare.py
+ExecStart=/usr/bin/python /usr/local/bin/ezshare.py
 
 [Install]
 WantedBy=multi-user.target

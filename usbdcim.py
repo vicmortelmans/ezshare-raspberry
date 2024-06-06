@@ -5,7 +5,6 @@ import exifread
 import getpass
 import glob
 import logging
-import nmcli
 import os
 import os.path
 import requests
@@ -26,7 +25,8 @@ _HISTORY = os.path.expanduser("~/.ezshare-raspberry-history")
 os.makedirs(_HISTORY, exist_ok=True)
 
 #temporary workspace while downloaden/uploading files
-_TEMP = "/tmp/usbdcim_temporary_files"
+#this file is also configured in /home/vic/.gphotos-uploader-cli/config.hjson
+_TEMP = "/home/vic/upload"
 os.makedirs(_TEMP, exist_ok=True)
 
 #path where the find automounted usb drives
@@ -233,15 +233,15 @@ def unmount(usb_path):
 def upload_to_photos(camera_name):
 
     def _upload_to_photos():
-        logging.info("Launching Jiotty Photo Uploader...")
-        out = subprocess.getoutput(f"/opt/jiotty-photos-uploader/bin/JiottyPhotosUploader -r {_TEMP}")
+        logging.info("Launching Photo Uploader...")
+        out = subprocess.getoutput(f"/home/vic/bin/gphotos-uploader-cli push")
         out = out.split('\n')
         for i in out:
-            if "All done without fatal errors" in i:
+            if "0 with errors" in i:
                 logging.info("Pictures successfully uploaded to Google Photo's")
                 return True  # Success
         else:
-            logging.error("Error uploading pictures to Google Photo's; here's Jiotty's output:")
+            logging.error("Error uploading pictures to Google Photo's; here's Photo Uploader's output:")
             for i in out:
                 logging.error(i)
             return False  # Failure

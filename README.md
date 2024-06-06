@@ -19,24 +19,63 @@ Because the wifi process is not working satisfyingly in all situations, there's 
 - Network Manager; it wasn't installed on my Raspbian 10; check the internet for installation instructions for your distro [only needed for wifi cards]
   `sudo apt install network-manager`
 - Python API for the Network Manager `nmcli` command [only needed for wifi cards]
-  `sudo python3 -m pip install nmcli`
+  `sudo python3 -m pip install nmcli` or `sudo apt install python3-networkmanager` 
 - ExifRead module for python [always needed] 
   `sudo python3 -m pip install exifread`
-- [Jiotty Photos Uploader](https://github.com/ylexus/jiotty-photos-uploader) is a very handy tool when you have to upload multiple folders of pictures to Google Photos and for the purpose at hand it also features a CLI. For raspberry pi, download from [Releases](https://github.com/ylexus/jiotty-photos-uploader/releases) the release that ends with `_armhf.deb`. I've run it on a model 3, and that's about as low as you can get, I'm afraid. [always needed]
 - usbmount package, to automatically mount USB storage devices. To make it work on my Raspberry Pi, I had to apply this fix: [usb - Raspberry 4 usbmount not working - Raspberry Pi Stack Exchange](https://raspberrypi.stackexchange.com/questions/100312/raspberry-4-usbmount-not-working/107449#107449). [only needed for usb cards]
+- gphotos-uploader-cli; see next section
+
+## Install gphotos-uploader-cli
+
+`git clone https://github.com/gphotosuploader/gphotos-uploader-cli`
+
+And in that directory: `make build`.
+
+Moved the executable to somewhere in your PATH
+
+Run `gphotos-uploader-cli init`
+
+Edit `~/.gphotos-uploader-cli/config.hjson`:
+
+```
+{
+    APIAppCredentials: {
+        ClientID: "YOUR_CLIENT_ID"
+        ClientSecret: "YOUR_CLIENT_SECRET"
+    }
+    Account: "YOUR_EMAIL_LOGIN_FOR_GOOGLE"
+    SecretsBackendType: file
+    Jobs: [
+        {
+        SourceFolder: "~/upload"
+            Album: "template:%_directory%"
+            DeleteAfterUpload: false
+            IncludePatterns: []
+            ExcludePatterns: []
+        }
+    ]
+}
+```
+
+Run `gphotos-uploader-cli auth` browser logging in to google.
+
+Add to `~/.profile`:
+
+```
+export GPHOTOS_CLI_TOKENSTORE_KEY=
+
+```
 
 ## Initial setup
 
 1. Install the prerequisites.
-2. Run `jiotty` for an initial setup. For the advanced user, [using your own Google API Client Secret](https://github.com/ylexus/jiotty-photos-uploader/wiki#using-your-own-google-api-client-secret) will give a performance boost! You can try to upload some pictures from the GUI to check if everything is working. 
 3. Clone this repository `git clone https://github.com/vicmortelmans/ezshare-raspberry.git` and `cd` into it
-4. Run `./script/install` to install and activate this script as a service.
-  This enables both wifi and usb background scripts. If you want to disable e.g. the wifi script:
-  `sudo systemctl disable ezshare-raspberry`
-5. For using the wifi downloading, configure your ezShare wifi SD card with following settings:
+4. Run `./script/install-ezschare` or `./script/install-usbdcim` to install and activate this script as a service.
+5. Check the status with `sudo systemctl ezshare-raspberry status` or `sudo systemctl usbdcim-raspberry status` 
+6. For using the wifi downloading, configure your ezShare wifi SD card with following settings:
   - SSID. The cards are preconfigured as `ez Share`. Just add a space and your camera name, e.g. `ez Share X100S`. This is especially useful when you have multiple SD cards, because the camera name will be copied into the album name on Google Photos.
   - Wifi password. Change the wifi password of the card to `Rodinal9`. This wifi password is hardcoded in the script. You can change it in code, if you're afraid that someone would find out and steal your pictures... Don't forget to re-run `./script/install` afterwards!
-6. For using the USB downloading, add an empty file in the root directory of the card, with a name `ez Share X100S`. 'X100S' can be your camera name, this will be copied into the album name on Google Photos.
+7. For using the USB downloading, add an empty file in the root directory of the card, with a name `ez Share X100S`. 'X100S' can be your camera name, this will be copied into the album name on Google Photos.
 
 ## Usage
 
