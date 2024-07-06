@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-#import beepy
+import beepy
 import datetime
 import exifread
 import getpass
@@ -49,7 +49,7 @@ def main():
 
             if usb_name:
 
-                #beepy.beep(sound="success")
+                beepy.beep(sound="success")
 
                 try:
 
@@ -66,13 +66,13 @@ def main():
                             logging.info(f"Progress {count} of {len(filenames)}")
                             download_result = download(camera_name, path, filename)
                             
-                            #if download_result:
-                                #beepy.beep(sound="ping")
-                            #else:
-                                #beepy.beep(sound="error")
+                            if download_result:
+                                beepy.beep(sound="ping")
+                            else:
+                                beepy.beep(sound="error")
 
                     unmount(usb_path)
-                    #beepy.beep(sound="ready")
+                    beepy.beep(sound="ready")
                     upload_result = upload_to_photos(camera_name)
 
                     if upload_result:
@@ -110,7 +110,7 @@ def main():
 
 def find_first_mounted_ezshare_usb_name():
 
-    files = glob.glob(f"{_USB}/*/ez Share*")
+    files = glob.glob(f"{_USB}/*/*/ez Share*")
     if files:
         usb_name = files[0].split('/')[-1]
         usb_path = files[0].split(usb_name)[0]
@@ -234,8 +234,8 @@ def upload_to_photos(camera_name):
 
     def _upload_to_photos():
         logging.info("Launching Photo Uploader...")
-        out = subprocess.getoutput(f"/home/vic/bin/gphotos-uploader-cli push")
-        out = out.split('\n')
+        result = subprocess.run(["/home/vic/bin/gphotos-uploader-cli","push"], capture_output=True, text=True, env=dict(os.environ, GPHOTOS_CLI_TOKENSTORE_KEY=""))
+        out = result.stdout.split('\n')
         for i in out:
             if "0 with errors" in i:
                 logging.info("Pictures successfully uploaded to Google Photo's")
