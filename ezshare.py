@@ -26,7 +26,7 @@ _HISTORY = os.path.expanduser("~/.ezshare-raspberry-history")
 os.makedirs(_HISTORY, exist_ok=True)
 
 #temporary workspace while downloaden/uploading files
-_TEMP = "/tmp/ezshare_temporary_files"
+_TEMP = "/home/vic/upload"
 os.makedirs(_TEMP, exist_ok=True)
 
 
@@ -84,7 +84,9 @@ def main():
                         logging.warning("Failure!")
 
                     logging.debug("Sleeping")
-                    time.sleep(10)  # wait an extra 10 seconds before polling again
+                    nmcli.device.wifi_rescan()
+                    time.sleep(30)  # wait an extra 10 seconds before polling again
+                    nmcli.device.wifi_rescan()
 
                 except Exception as e:
 
@@ -123,7 +125,7 @@ def find_active_connection():
 
 def find_first_active_ezshare_ssid():
 
-    devices = nmcli.device.wifi()
+    devices = nmcli.device.wifi(rescan=True)  # rescan doesn't really seem to work
     for device in devices:
         if "ez Share" in device.ssid:
             logging.info(f"'{device.ssid}' is online!")
@@ -166,7 +168,7 @@ def connect_to_ezshare_ssid(ssid):
 
 
 def get_list_of_filenames_on_camera():
-    domain = "http://ezshare.card/"
+    domain = "http://192.168.4.1/"  # domain: ezshare.card
     url = domain + "mphoto"
     # in this html, <img> elements represent the pictures on the SD card and 
     # their @src attribute looks like this:
@@ -215,7 +217,7 @@ def get_list_of_filenames_on_camera():
 def download(camera_name, directory, filename):
     # the file is downloaded, the date is fetched and the file is stored into
     # {_TEMP}/{date} {camera_name}/{filename}
-    url = f"http://ezshare.card/DCIM/{directory}/{filename}"
+    url = f"http://192.168.4.1/DCIM/{directory}/{filename}"
     directory = f"{_TEMP}"
 
     try:
@@ -288,15 +290,14 @@ def connect_to_home_network(name):
 def upload_to_photos(camera_name):
 
     def _upload_to_photos():
-        logging.info("Launching Jiotty Photo Uploader...")
-        out = subprocess.getoutput(f"/opt/jiotty-photos-uploader/bin/JiottyPhotosUploader -r {_TEMP}")
-        out = out.split('\n')
+        result = subprocess.run(["/home/vic/bin/gphotos-uploader-cli","push"], capture_output=True, text=True, env=dict(os.environ, GPHOTOS_CLI_TOKENSTORE_KEY=""))
+        out = result.stdout.split('\n')
         for i in out:
-            if "All done without fatal errors" in i:
+            if "0 with errors" in i:
                 logging.info("Pictures successfully uploaded to Google Photo's")
                 return True  # Success
         else:
-            logging.error("Error uploading pictures to Google Photo's; here's Jiotty's output:")
+            logging.error("Error uploading pictures to Google Photo's; here's Photo Uploader's output:")
             for i in out:
                 logging.error(i)
             return False  # Failure
