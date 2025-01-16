@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-import beepy
+#!/usr/bin/env python
 import datetime
 import exifread
 import getpass
@@ -13,7 +12,6 @@ import subprocess
 import time
 import traceback
 import urllib.parse
-from bs4 import BeautifulSoup
 
 
 #all USB drives should contain a root file "ez Share X100S", where 'X100S' is variable and 
@@ -49,7 +47,7 @@ def main():
 
             if usb_name:
 
-                beepy.beep(sound="success")
+                os.system('spd-say "Starting to read card"')
 
                 try:
 
@@ -67,12 +65,12 @@ def main():
                             download_result = download(camera_name, path, filename)
                             
                             if download_result:
-                                beepy.beep(sound="ping")
+                                os.system(f'spd-say "{count}"')
                             else:
-                                beepy.beep(sound="error")
+                                os.system('spd-say "an error has occurred"')
 
                     unmount(usb_path)
-                    beepy.beep(sound="ready")
+                    os.system('spd-say "detach your card"')
                     upload_result = upload_to_photos(camera_name)
 
                     if upload_result:
@@ -226,7 +224,7 @@ def add_to_list_of_downloaded_files(camera_name, filename):
 
 
 def unmount(usb_path):
-    os.system(f"pumount {usb_path}")
+    os.system(f"umount {usb_path}")
     logging.info(f"Unmounted {usb_path}")
 
 

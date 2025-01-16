@@ -8,7 +8,7 @@ Group=vic
 SupplementaryGroups=audio
 Restart=always
 RestartSec=1
-ExecStart=/usr/bin/python3 /usr/local/bin/usbdcim.py
+ExecStart=/usr/local/share/usbdcim_venv/bin/python /usr/local/bin/usbdcim.py
 
 [Install]
 WantedBy=multi-user.target

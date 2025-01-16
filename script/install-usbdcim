@@ -5,6 +5,8 @@ set -e
 cd "$(dirname "$0")/.."
 
 echo "=> Installing ezshare-usbdcim script...\n"
+sudo python3 -m venv /usr/local/share/usbdcim_venv
+sudo /usr/local/share/usbdcim_venv/bin/pip install -r requirements.txt
 sudo cp usbdcim.py /usr/local/bin/
 sudo chmod +x /usr/local/bin/usbdcim.py
 
