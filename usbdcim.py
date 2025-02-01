@@ -27,8 +27,9 @@ os.makedirs(_HISTORY, exist_ok=True)
 _TEMP = "/home/vic/upload"
 os.makedirs(_TEMP, exist_ok=True)
 
-#path where the find automounted usb drives
-_USB = "/media"
+#path where the find automounted sd cards
+#(automount is configured in /etc/fstab)
+_USB = "/media/sd"
 
 logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d %(funcName)s] %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=logging.INFO)
 
@@ -108,7 +109,7 @@ def main():
 
 def find_first_mounted_ezshare_usb_name():
 
-    files = glob.glob(f"{_USB}/*/*/ez Share*")
+    files = glob.glob(f"{_USB}/ez Share*")
     if files:
         usb_name = files[0].split('/')[-1]
         usb_path = files[0].split(usb_name)[0]

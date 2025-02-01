@@ -2,6 +2,5 @@ certifi==2024.12.14
 charset-normalizer==3.4.1
 ExifRead==3.0.0
 idna==3.10
-pycharm-debug===debug
 requests==2.32.3
 urllib3==2.3.0
