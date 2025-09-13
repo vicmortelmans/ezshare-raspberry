@@ -24,12 +24,12 @@ os.makedirs(_HISTORY, exist_ok=True)
 
 #temporary workspace while downloaden/uploading files
 #this file is also configured in /home/vic/.gphotos-uploader-cli/config.hjson
-_TEMP = "/home/vic/upload"
+_TEMP = "/home/vic/Pictures/upload"
 os.makedirs(_TEMP, exist_ok=True)
 
 #path where the find automounted sd cards
 #(automount is configured in /etc/fstab)
-_USB = "/media/sd"
+_USB = "/home/vic/Pictures/USB"
 
 logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d %(funcName)s] %(message)s', datefmt='%Y-%m-%d:%H:%M:%S', level=logging.INFO)
 
@@ -232,6 +232,7 @@ def unmount(usb_path):
 def upload_to_photos(camera_name):
 
     def _upload_to_photos():
+        import pdb;pdb.set_trace()
         logging.info("Launching Photo Uploader...")
         result = subprocess.run(["/home/vic/bin/gphotos-uploader-cli","push"], capture_output=True, text=True, env=dict(os.environ, GPHOTOS_CLI_TOKENSTORE_KEY=""))
         out = result.stdout.split('\n')
